@@ -1016,7 +1016,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 461710, guid: 4adbbae4831a7774ea0645c19218c458, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.5
+      value: -0.28
       objectReference: {fileID: 0}
     - target: {fileID: 461710, guid: 4adbbae4831a7774ea0645c19218c458, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1954,7 +1954,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 400122, guid: 7144acb9459793743bd1b60b10fe0d30, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -3
       objectReference: {fileID: 0}
     - target: {fileID: 400122, guid: 7144acb9459793743bd1b60b10fe0d30, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1983,6 +1983,10 @@ PrefabInstance:
     - target: {fileID: 400122, guid: 7144acb9459793743bd1b60b10fe0d30, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9500000, guid: 7144acb9459793743bd1b60b10fe0d30, type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9500000, guid: 7144acb9459793743bd1b60b10fe0d30, type: 3}
       propertyPath: m_Controller
@@ -2386,12 +2390,71 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 100122, guid: 7144acb9459793743bd1b60b10fe0d30, type: 3}
   m_PrefabInstance: {fileID: 814206330}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &929718714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 929718713}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0bef0bc2acee104d91c9754fa081c90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  controller: {fileID: 929718719}
+  speed: 0.1
 --- !u!4 &929718715 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400122, guid: 7144acb9459793743bd1b60b10fe0d30, type: 3}
   m_PrefabInstance: {fileID: 814206330}
   m_PrefabAsset: {fileID: 0}
---- !u!143 &929718716
+--- !u!136 &929718716
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 929718713}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 0
+  m_Radius: 0.2851304
+  m_Height: 1.9
+  m_Direction: 1
+  m_Center: {x: 0, y: 1, z: 0.014869601}
+--- !u!114 &929718717
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 929718713}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a74f00deb3215f42a68edb1d53bc2b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rb: {fileID: 929718718}
+  speed: 1
+  maxVelocityChange: 10
+--- !u!54 &929718718
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 929718713}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 36
+  m_CollisionDetection: 3
+--- !u!143 &929718719
 CharacterController:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2402,27 +2465,13 @@ CharacterController:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Height: 2
+  m_Height: 1
   m_Radius: 0.3
   m_SlopeLimit: 45
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0.9, z: 0}
---- !u!114 &929718717
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 929718713}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2a74f00deb3215f42a68edb1d53bc2b3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  controller: {fileID: 929718716}
-  speed: 1
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!1 &988193877
 GameObject:
   m_ObjectHideFlags: 0
@@ -2722,7 +2771,7 @@ AudioListener:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1010804938}
-  m_Enabled: 1
+  m_Enabled: 0
 --- !u!20 &1010804941
 Camera:
   m_ObjectHideFlags: 0
