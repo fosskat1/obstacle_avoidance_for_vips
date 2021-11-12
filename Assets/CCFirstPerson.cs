@@ -14,7 +14,7 @@ public class CCFirstPerson : MonoBehaviour
     void Update()
     {
         if(movementEnabled){
-            Vector3 direction = new Vector3(0f, 0f, 1f).normalized;
+            Vector3 direction = new Vector3(-1f, 0f, 0.5f).normalized;
             controller.Move(direction * speed * Time.deltaTime);
         }
     }
