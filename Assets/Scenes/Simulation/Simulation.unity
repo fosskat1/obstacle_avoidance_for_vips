@@ -363,6 +363,29 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4adbbae4831a7774ea0645c19218c458, type: 3}
+--- !u!1 &466485647 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 148854, guid: 4adbbae4831a7774ea0645c19218c458, type: 3}
+  m_PrefabInstance: {fileID: 379245709}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &466485648 stripped
+BoxCollider:
+  m_CorrespondingSourceObject: {fileID: 6590756, guid: 4adbbae4831a7774ea0645c19218c458, type: 3}
+  m_PrefabInstance: {fileID: 379245709}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &466485649
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 466485647}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6342fc0d30da01d459b54145f1c6d102, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Collider: {fileID: 466485648}
 --- !u!1 &533210976
 GameObject:
   m_ObjectHideFlags: 0
@@ -1387,7 +1410,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 130
+  field of view: 81
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
