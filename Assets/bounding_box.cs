@@ -5,18 +5,17 @@ using UnityEngine;
 public class bounding_box : MonoBehaviour
 {
     public Collider m_Collider;
-    private Vector3 m_Min;
-    private Vector3 m_Max;
-    private Vector3 m_Size;
-    private Vector3 m_Center;
-    public Transform cameraTransform;
-    public LineRenderer line;
     public Camera camera;
     public Transform cone;
+    public LineRenderer lineRenderer;
 
     // Start is called before the first frame update
     void Start()
     {
+        Vector3 m_Min;
+        Vector3 m_Max;
+        Vector3 m_Size;
+        Vector3 m_Center;
         //Fetch the Collider from the GameObject
         m_Collider = GetComponent<Collider>();
         //Fetch the center of the Collider volume
@@ -26,29 +25,30 @@ public class bounding_box : MonoBehaviour
         //Fetch the minimum and maximum bounds of the Collider volume
         m_Min = m_Collider.bounds.min;
         m_Max = m_Collider.bounds.max;
-        //Output this data into the console
-        OutputData();
+        lineRenderer.useWorldSpace = true;
+
+
     }
 
     // Update is called before every frame
     void Update()
     {
-        Vector3 relativePosition = cameraTransform.InverseTransformDirection(transform.position - cameraTransform.position);
-        Debug.Log("Relavive: " + relativePosition);
+        Vector3 min = m_Collider.bounds.min;
+        Vector3 max = m_Collider.bounds.max;
 
-        Vector3 screenPos = camera.WorldToScreenPoint(cone.position);
-        Debug.Log("target is " + screenPos.x + ", " + screenPos.y +  " pixels from the bottom left");
+        Vector3 screenPos = camera.WorldToScreenPoint(new Vector3(max.x, min.y, min.z));
+        Vector3 screenPosMax = camera.WorldToScreenPoint(new Vector3(max.x, max.y, max.z));
+        Debug.Log("target min: " + screenPos.x + ", " + screenPos.y +  "; target max: " + screenPosMax.x + ", " + screenPosMax.y);
+
+        Vector3 t = camera.ScreenToWorldPoint(screenPos);
+        Vector3 t1 = camera.ScreenToWorldPoint(screenPosMax);
+        Debug.Log(t + ", " + t1);
+        lineRenderer.SetPosition(0, t);
+        lineRenderer.SetPosition(1, t1);
+
+
+
     }
-
-    void OutputData()
-    {
-        //Output to the console the center and size of the Collider volume
-        Debug.Log("Collider Center : " + m_Center);
-        Debug.Log("Collider Size : " + m_Size);
-        Debug.Log("Collider bound Minimum : " + m_Min);
-        Debug.Log("Collider bound Maximum : " + m_Max);
-    }
-
 
 
 }
