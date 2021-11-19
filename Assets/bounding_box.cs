@@ -18,14 +18,15 @@ public class bounding_box : MonoBehaviour
     // Update is called before every frame
     void Update()
     {
+        // get camera coordinates
         Vector3 min = m_Collider.bounds.min;
         Vector3 max = m_Collider.bounds.max;
+        Vector3 conePosMin = camera.WorldToScreenPoint(new Vector3(max.x, min.y, min.z));
+        Vector3 conePosMax = camera.WorldToScreenPoint(new Vector3(max.x, max.y, max.z));
+        Debug.Log("target min: " + conePosMin.x + ", " + conePosMin.y +  "; target max: " + conePosMax.x + ", " + conePosMax.y);
 
-        Vector3 screenPos = camera.WorldToScreenPoint(new Vector3(max.x, min.y, min.z));
-        Vector3 screenPosMax = camera.WorldToScreenPoint(new Vector3(max.x, max.y, max.z));
-        Debug.Log("target min: " + screenPos.x + ", " + screenPos.y +  "; target max: " + screenPosMax.x + ", " + screenPosMax.y);
-
-        RenderPixelLine(screenPos, screenPosMax);
+        // Render line to check if pixel coordinates are correct
+        RenderPixelLine(conePosMin, conePosMax);
     }
 
     void RenderPixelLine(Vector3 conePosMin, Vector3 conePosMax)
@@ -36,6 +37,5 @@ public class bounding_box : MonoBehaviour
         lineRenderer.SetPosition(0, t);
         lineRenderer.SetPosition(1, t1);
     }
-
 
 }
