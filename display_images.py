@@ -66,12 +66,12 @@ def draw_bounding_box_on_image(
 if __name__ == '__main__':
 	file_list = os.listdir(MAIN_DIR)
 
-	jpg_files = sorted([x for x in file_list if x.endswith('.jpg')])
-	txt_files = sorted([x for x in file_list if x.endswith('.txt')])
+	jpg_files = sorted([x for x in file_list if x.endswith('_view.jpg')])
+	txt_files = sorted([x for x in file_list if x.endswith('_boxes.txt')])
 
 	for file_idx in range(len(jpg_files)):
-		jpg_file = str(file_idx) + '.jpg'
-		txt_file = str(file_idx) + '.txt'
+		jpg_file = str(file_idx) + '_view.jpg'
+		txt_file = str(file_idx) + '_boxes.txt'
 
 		try:
 			with open(os.path.join(MAIN_DIR, txt_file), 'r') as f:
