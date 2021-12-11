@@ -32,7 +32,7 @@ def check_t():
     spec = _prepare_spec()
 
     spec.name = "t should be greater than t1"
-    spec.spec = "eventually (t > t1)"
+    spec.spec = "t > t1"
 
     return _parse_and_eval_spec(spec)
 
