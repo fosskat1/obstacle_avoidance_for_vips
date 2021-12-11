@@ -16,7 +16,7 @@ def extract_trace(tracefile: Path) -> Trace:
     			"fireHydrantX", "fireHydrantY", "fireHydrantZ",
     			"stopSignX", "stopSignY", "stopSignZ",
     			"bikeX", "bikeY", "bikeZ",
-    			"leftSidewalkBoundZ", "rightSidewalkBoundZ"
+    			"leftSidewalkBoundZ", "rightSidewalkBoundZ", "endSidewalkBoundX"
     	]
     trace = defaultdict(deque)  # type: Mapping[str, deque[Tuple[float, float]]]
     with open(tracefile, "r") as f:
@@ -31,13 +31,16 @@ def _prepare_spec() -> STLDenseTimeSpecification:
     # spec.set_sampling_period(500, "ms", 0.1)
     spec.declare_const("sidewalk_safe_dist", "float", "0.2")
     spec.declare_const("obstacle_safe_dist", "float", "0.5")
+    # spec.declare_const("sidewalk_length", "float", "0.0")
     # spec.declare_const("T", "float", "20.0")
 
+    spec.declare_var("dist_covered", "float")
     spec.declare_var("left_sidewalk_dist", "float")
     spec.declare_var("right_sidewalk_dist", "float")
     spec.declare_var("fire_hydrant_dist", "float")
     spec.declare_var("stop_sign_dist", "float")
     spec.declare_var("bike_dist", "float")
+	spec.declare_var("end_dist", "float")
 
     return spec
 
@@ -103,11 +106,13 @@ def _parse_and_eval_spec(spec: STLDenseTimeSpecification, trace: Trace) -> float
 		)
 
 	return spec.evaluate(
+		["dist_covered", list(trace["dummyX"])],
 	    ["left_sidewalk_dist", left_sidewalk_dist],
 	    ["right_sidewalk_dist", right_sidewalk_dist],
 	    ["fire_hydrant_dist", fire_hydrant_dist],
 	    ["stop_sign_dist", stop_sign_dist],
 	    ["bike_dist", bike_dist],
+	    ["end_dist", list(trace["endSidewalkBoundX"])],
 	)
 
 def _calculate_distance(x1, y1, z1, x2, y2, z2):
@@ -129,6 +134,14 @@ def check_obstacle_avoidance(trace: Trace) -> float:
 
 	return _parse_and_eval_spec(spec, trace)
 
+def check_reach_end(trace: Trace) -> float:
+	spec = _prepare_spec()
+
+	spec.name = "Check if person reaches the end of the sidewalk"
+	spec.spec = "eventually (dist_covered <= end_dist)"
+
+	return _parse_and_eval_spec(spec, trace)
+
 def evaluate_tracefile(tracefile: Path):
     trace = extract_trace(tracefile)
 
@@ -146,8 +159,11 @@ def evaluate_tracefile(tracefile: Path):
     #     )
     # )
 
+    reach_end = check_reach_end(trace)
+
     print("Robustness for `on_path` = ", on_path)
     print("Robustness for `obstacle_avoidance` = ", obstacle_avoidance)
+    print("Robustness for `reach_end` = ", reach_end)
 
 def main():
     # args = parse_args()
