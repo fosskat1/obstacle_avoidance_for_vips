@@ -32,7 +32,7 @@ def _prepare_spec() -> STLDenseTimeSpecification:
 	spec = STLDenseTimeSpecification()
 	# spec.set_sampling_period(500, "ms", 0.1)
 	spec.declare_const("sidewalk_safe_dist", "float", "0.2")
-	spec.declare_const("obstacle_safe_dist", "float", "0.5")
+	spec.declare_const("obstacle_safe_dist", "float", "0.8")
 	# spec.declare_const("sidewalk_length", "float", "0.0")
 	# spec.declare_const("T", "float", "20.0")
 
@@ -57,6 +57,8 @@ def _parse_and_eval_spec(spec: STLDenseTimeSpecification, trace: Trace) -> float
 	left_sidewalk_dist, right_sidewalk_dist = [], []
 
 	fire_hydrant_dist, stop_sign_dist, bike_dist = [], [], []
+
+	dist_type = "1d"
 
 	for idx in range(num_timesteps):
 		ts = trace["dummyZ"][idx][0]
@@ -86,7 +88,8 @@ def _parse_and_eval_spec(spec: STLDenseTimeSpecification, trace: Trace) -> float
 			(
 				ts, _calculate_distance(
 					dummy_x_ts,dummy_y_ts,dummy_z_ts,
-					fire_hydrant_x_ts,fire_hydrant_y_ts,fire_hydrant_z_ts
+					fire_hydrant_x_ts,fire_hydrant_y_ts,fire_hydrant_z_ts,
+					type=dist_type
 				)
 			)
 		)
@@ -94,7 +97,8 @@ def _parse_and_eval_spec(spec: STLDenseTimeSpecification, trace: Trace) -> float
 			(
 				ts, _calculate_distance(
 					dummy_x_ts,dummy_y_ts, dummy_z_ts,
-					stop_sign_x_ts,stop_sign_y_ts,stop_sign_z_ts
+					stop_sign_x_ts,stop_sign_y_ts,stop_sign_z_ts,
+					type=dist_type
 				)
 			)
 		)
@@ -102,7 +106,8 @@ def _parse_and_eval_spec(spec: STLDenseTimeSpecification, trace: Trace) -> float
 			(
 				ts, _calculate_distance(
 					dummy_x_ts,dummy_y_ts, dummy_z_ts,
-					bike_x_ts,bike_y_ts,bike_z_ts
+					bike_x_ts,bike_y_ts,bike_z_ts,
+					type=dist_type
 				)
 			)
 		)
@@ -117,8 +122,20 @@ def _parse_and_eval_spec(spec: STLDenseTimeSpecification, trace: Trace) -> float
 	    ["end_dist", list(trace["endSidewalkBoundX"])],
 	)
 
-def _calculate_distance(x1, y1, z1, x2, y2, z2):
-	return math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)
+def _calculate_distance(x1, y1, z1, x2, y2, z2, type = "3d"):
+	if type == "3d": # Euclidean 3d distance
+		dist = math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)
+	elif type == "2d": # Euclidean 2d distance
+		dist = math.sqrt((x1-x2)**2 + (z1-z2)**2)
+	elif type == "1d": # Euclidean 1d distance
+		if abs(z2 - z1) < 0.3:
+			dist = abs(x2 - x1)
+		else:
+			dist = 5 # default value for safe distance
+	else:
+		raise AttributeError
+
+	return dist
 
 def check_on_path(trace: Trace) -> float:
 	spec = _prepare_spec()
@@ -186,7 +203,7 @@ def main():
 
     tracefile_dir = "Traces"
 
-    tracefiles = glob.glob(os.path.join(tracefile_dir, "*.csv"))
+    tracefiles = sorted(glob.glob(os.path.join(tracefile_dir, "*.csv")))[:-1]
 
     for tracefile in tracefiles:
 	    print("===================================================")
