@@ -46,7 +46,11 @@ def _prepare_spec() -> STLDenseTimeSpecification:
 
 	return spec
 
-def _parse_and_eval_spec(spec: STLDenseTimeSpecification, trace: Trace) -> float:
+def _parse_and_eval_spec(
+	spec: STLDenseTimeSpecification, 
+	trace: Trace, 
+	dist_type: str
+) -> float:
 	try:
 	    spec.parse()
 	except rtamt.STLParseException as e:
@@ -57,8 +61,6 @@ def _parse_and_eval_spec(spec: STLDenseTimeSpecification, trace: Trace) -> float
 	left_sidewalk_dist, right_sidewalk_dist = [], []
 
 	fire_hydrant_dist, stop_sign_dist, bike_dist = [], [], []
-
-	dist_type = "1d"
 
 	for idx in range(num_timesteps):
 		ts = trace["dummyZ"][idx][0]
@@ -137,53 +139,77 @@ def _calculate_distance(x1, y1, z1, x2, y2, z2, type = "3d"):
 
 	return dist
 
-def check_on_path(trace: Trace) -> float:
+def check_on_path(trace: Trace, dist_type: str) -> float:
 	spec = _prepare_spec()
 
 	spec.name = "Check if person stays within sidewalk bounds"
 	spec.spec = "always ((left_sidewalk_dist >= sidewalk_safe_dist) and (right_sidewalk_dist >= sidewalk_safe_dist))"
 
-	return _parse_and_eval_spec(spec, trace)
+	return _parse_and_eval_spec(spec, trace, dist_type)
 
-def check_obstacle_avoidance(trace: Trace) -> float:
+def check_obstacle_avoidance(trace: Trace, dist_type: str) -> float:
 	spec = _prepare_spec()
 
 	spec.name = "Check if person stays away from obstacles"
 	spec.spec = "always ((fire_hydrant_dist >= obstacle_safe_dist) and (stop_sign_dist >= obstacle_safe_dist) and (bike_dist >= obstacle_safe_dist))"
 
-	return _parse_and_eval_spec(spec, trace)
+	return _parse_and_eval_spec(spec, trace, dist_type)
 
-def check_reach_end(trace: Trace) -> float:
+def check_reach_end(trace: Trace, dist_type: str) -> float:
 	spec = _prepare_spec()
 
 	spec.name = "Check if person reaches the end of the sidewalk"
 	spec.spec = "eventually (dist_covered <= end_dist)"
 
-	return _parse_and_eval_spec(spec, trace)
+	return _parse_and_eval_spec(spec, trace, dist_type)
 
-def evaluate_tracefile(tracefile: Path):
+def evaluate_tracefile(tracefile: Path, dist_type: str):
     trace = extract_trace(tracefile)
 
-    on_path = check_on_path(trace)
+    on_path = check_on_path(trace, dist_type)
     print(
         "Robustness for `on_path` = {}".format(
             (on_path[0], on_path[-1])
         )
     )
 
-    obstacle_avoidance = check_obstacle_avoidance(trace)
+    obstacle_avoidance = check_obstacle_avoidance(trace, dist_type)
     print(
         "Robustness for `obstacle_avoidance` = {}".format(
             (obstacle_avoidance[0], obstacle_avoidance[-1])
         )
     )
 
-    reach_end = check_reach_end(trace)
+    reach_end = check_reach_end(trace, dist_type)
     print(
         "Robustness for `reach_end` = {}".format(
             (reach_end[0], reach_end[-1])
         )
     )
+
+    (
+    	trial_success, 
+    	on_path_success, 
+    	obstacle_avoidance_success, 
+    	reach_end_success
+    ) = False, False, False, False
+
+    if on_path[0][1] > 0:
+    	on_path_success = True
+    if obstacle_avoidance[0][1] > 0:
+    	obstacle_avoidance_success = True
+    if reach_end[0][1] > 0:
+    	reach_end_success = True
+    if on_path_success and obstacle_avoidance_success and reach_end_success:
+    	trial_success = True
+
+    return (
+    	trial_success, 
+    	on_path_success, 
+    	obstacle_avoidance_success, 
+    	reach_end_success
+    	)
+
 
 
     # print("Robustness for `on_path` = ", on_path)
@@ -201,16 +227,45 @@ def main():
     #     print("===================================================")
     #     print()
 
-    tracefile_dir = "Traces"
+	tracefile_dir = "Traces"
+	dist_type = "2d"
 
-    tracefiles = sorted(glob.glob(os.path.join(tracefile_dir, "*.csv")))[:-1]
+	tracefiles = sorted(glob.glob(os.path.join(tracefile_dir, "*.csv")))[:-1]
 
-    for tracefile in tracefiles:
+	num_trials = 0
+	num_successful_trials = 0
+	num_successful_on_path = 0
+	num_successful_obstacle_avoidance = 0
+	num_successful_reach_end = 0
+	for tracefile in tracefiles:
 	    print("===================================================")
 	    print("Evaluating trace file: %s", tracefile)
-	    evaluate_tracefile(tracefile)
+	    success_values = evaluate_tracefile(tracefile, dist_type)
 	    print("===================================================")
 	    print()
+	    num_trials += 1
+	    if success_values[0]:
+	    	num_successful_trials += 1
+	    if success_values[1]:
+	    	num_successful_on_path += 1
+	    if success_values[2]:
+	    	num_successful_obstacle_avoidance += 1
+	    if success_values[3]:
+	    	num_successful_reach_end += 1
+
+	print("===================================================")
+	print("Summary")
+	print("Number of trials:\t\t\t\t", num_trials)
+	print("Number of successful trials:\t\t\t", num_successful_trials)
+	print("Number of trials with user on path:\t\t", num_successful_on_path)
+	print(
+		  "Number of trials with obstacles avoided:\t", 
+		  num_successful_obstacle_avoidance
+		)
+	print(
+		  "Number of trials with end reached:\t\t", 
+		  num_successful_reach_end
+		  )
 
 
 if __name__ == "__main__":
