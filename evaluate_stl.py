@@ -3,6 +3,8 @@ from collections import defaultdict, deque
 from pathlib import Path
 from typing import Iterable, List, Mapping, NamedTuple, Tuple
 import math
+import glob
+import os
 
 import rtamt
 from rtamt import STLDenseTimeSpecification
@@ -27,22 +29,22 @@ def extract_trace(tracefile: Path) -> Trace:
     return trace
 
 def _prepare_spec() -> STLDenseTimeSpecification:
-    spec = STLDenseTimeSpecification()
-    # spec.set_sampling_period(500, "ms", 0.1)
-    spec.declare_const("sidewalk_safe_dist", "float", "0.2")
-    spec.declare_const("obstacle_safe_dist", "float", "0.5")
-    # spec.declare_const("sidewalk_length", "float", "0.0")
-    # spec.declare_const("T", "float", "20.0")
+	spec = STLDenseTimeSpecification()
+	# spec.set_sampling_period(500, "ms", 0.1)
+	spec.declare_const("sidewalk_safe_dist", "float", "0.2")
+	spec.declare_const("obstacle_safe_dist", "float", "0.5")
+	# spec.declare_const("sidewalk_length", "float", "0.0")
+	# spec.declare_const("T", "float", "20.0")
 
-    spec.declare_var("dist_covered", "float")
-    spec.declare_var("left_sidewalk_dist", "float")
-    spec.declare_var("right_sidewalk_dist", "float")
-    spec.declare_var("fire_hydrant_dist", "float")
-    spec.declare_var("stop_sign_dist", "float")
-    spec.declare_var("bike_dist", "float")
+	spec.declare_var("dist_covered", "float")
+	spec.declare_var("left_sidewalk_dist", "float")
+	spec.declare_var("right_sidewalk_dist", "float")
+	spec.declare_var("fire_hydrant_dist", "float")
+	spec.declare_var("stop_sign_dist", "float")
+	spec.declare_var("bike_dist", "float")
 	spec.declare_var("end_dist", "float")
 
-    return spec
+	return spec
 
 def _parse_and_eval_spec(spec: STLDenseTimeSpecification, trace: Trace) -> float:
 	try:
@@ -146,24 +148,30 @@ def evaluate_tracefile(tracefile: Path):
     trace = extract_trace(tracefile)
 
     on_path = check_on_path(trace)
-    # print(
-    #     "Robustness for `on_path` = {}".format(
-    #         (on_path[0], on_path[-1])
-    #     )
-    # )
+    print(
+        "Robustness for `on_path` = {}".format(
+            (on_path[0], on_path[-1])
+        )
+    )
 
     obstacle_avoidance = check_obstacle_avoidance(trace)
-    # print(
-    #     "Robustness for `obstacle_avoidance` = {}".format(
-    #         (obstacle_avoidance[0], obstacle_avoidance[-1])
-    #     )
-    # )
+    print(
+        "Robustness for `obstacle_avoidance` = {}".format(
+            (obstacle_avoidance[0], obstacle_avoidance[-1])
+        )
+    )
 
     reach_end = check_reach_end(trace)
+    print(
+        "Robustness for `reach_end` = {}".format(
+            (reach_end[0], reach_end[-1])
+        )
+    )
 
-    print("Robustness for `on_path` = ", on_path)
-    print("Robustness for `obstacle_avoidance` = ", obstacle_avoidance)
-    print("Robustness for `reach_end` = ", reach_end)
+
+    # print("Robustness for `on_path` = ", on_path)
+    # print("Robustness for `obstacle_avoidance` = ", obstacle_avoidance)
+    # print("Robustness for `reach_end` = ", reach_end)
 
 def main():
     # args = parse_args()
@@ -176,12 +184,16 @@ def main():
     #     print("===================================================")
     #     print()
 
-    tracefile = "trace.csv"
-    print("===================================================")
-    print("Evaluating trace file: %s", tracefile)
-    evaluate_tracefile(tracefile)
-    print("===================================================")
-    print()
+    tracefile_dir = "Traces"
+
+    tracefiles = glob.glob(os.path.join(tracefile_dir, "*.csv"))
+
+    for tracefile in tracefiles:
+	    print("===================================================")
+	    print("Evaluating trace file: %s", tracefile)
+	    evaluate_tracefile(tracefile)
+	    print("===================================================")
+	    print()
 
 
 if __name__ == "__main__":
