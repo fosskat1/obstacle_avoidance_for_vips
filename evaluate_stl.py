@@ -18,7 +18,11 @@ def extract_trace(tracefile: Path) -> Trace:
     			"fireHydrantX", "fireHydrantY", "fireHydrantZ",
     			"stopSignX", "stopSignY", "stopSignZ",
     			"bikeX", "bikeY", "bikeZ",
-    			"leftSidewalkBoundZ", "rightSidewalkBoundZ", "endSidewalkBoundX"
+    			"leftSidewalkBoundZ", "rightSidewalkBoundZ", "endSidewalkBoundX",
+				"bikeColliderXMin", "bikeColliderXMax", "bikeColliderClosestX", "bikeColliderClosestZ",
+				"hydrantColliderXMin", "hydrantColliderXMax", "hydrantColliderClosestX", "hydrantColliderClosestZ",
+				"stopColliderXMin", "stopColliderXMax", "stopColliderClosestX", "stopColliderClosestZ",
+				"dummyColliderXMin", "dummyColliderXMax", "dummyColliderClosestX", "dummyColliderClosestZ"
     	]
     trace = defaultdict(deque)  # type: Mapping[str, deque[Tuple[float, float]]]
     with open(tracefile, "r") as f:
@@ -32,7 +36,7 @@ def _prepare_spec() -> STLDenseTimeSpecification:
 	spec = STLDenseTimeSpecification()
 	# spec.set_sampling_period(500, "ms", 0.1)
 	spec.declare_const("sidewalk_safe_dist", "float", "0.2")
-	spec.declare_const("obstacle_safe_dist", "float", "0.8")
+	spec.declare_const("obstacle_safe_dist", "float", "0.6")
 	# spec.declare_const("sidewalk_length", "float", "0.0")
 	# spec.declare_const("T", "float", "20.0")
 
@@ -68,18 +72,35 @@ def _parse_and_eval_spec(
 		dummy_x_ts = trace["dummyX"][idx][1]
 		dummy_y_ts = trace["dummyY"][idx][1]
 		dummy_z_ts = trace["dummyZ"][idx][1]
+		dummy_collider_x_min = trace["dummyColliderXMin"][idx][1]
+		dummy_collider_x_max = trace["dummyColliderXMax"][idx][1]
+		dummy_collider_closest_x = trace["dummyColliderClosestX"][idx][1]
+		dummy_collider_closest_z = trace["dummyColliderClosestZ"][idx][1]
+
 
 		fire_hydrant_x_ts = trace["fireHydrantX"][idx][1]
 		fire_hydrant_y_ts = trace["fireHydrantY"][idx][1]
 		fire_hydrant_z_ts = trace["fireHydrantZ"][idx][1]
+		fire_hydrant_collider_x_min = trace["hydrantColliderXMin"][idx][1]
+		fire_hydrant_collider_x_max = trace["hydrantColliderXMax"][idx][1]
+		fire_hydrant_collider_closest_x = trace["hydrantColliderClosestX"][idx][1]
+		fire_hydrant_collider_closest_z = trace["hydrantColliderClosestZ"][idx][1]
 
 		stop_sign_x_ts = trace["stopSignX"][idx][1]
 		stop_sign_y_ts = trace["stopSignY"][idx][1]
 		stop_sign_z_ts = trace["stopSignZ"][idx][1]
+		stop_sign_collider_x_min = trace["stopColliderXMin"][idx][1]
+		stop_sign_collider_x_max = trace["stopColliderXMax"][idx][1]
+		stop_sign_collider_closest_x = trace["stopColliderClosestX"][idx][1]
+		stop_sign_collider_closest_z = trace["stopColliderClosestZ"][idx][1]
 
 		bike_x_ts = trace["bikeX"][idx][1]
 		bike_y_ts = trace["bikeY"][idx][1]
 		bike_z_ts = trace["bikeZ"][idx][1]
+		bike_collider_x_min = trace["bikeColliderXMin"][idx][1]
+		bike_collider_x_max = trace["bikeColliderXMax"][idx][1]
+		bike_collider_closest_x = trace["bikeColliderClosestX"][idx][1]
+		bike_collider_closest_z = trace["bikeColliderClosestZ"][idx][1]
 
 		left_sidewalk_z_ts = trace["leftSidewalkBoundZ"][idx][1]
 		right_sidewalk_z_ts = trace["rightSidewalkBoundZ"][idx][1]
@@ -88,28 +109,22 @@ def _parse_and_eval_spec(
 		right_sidewalk_dist.append((ts, right_sidewalk_z_ts-dummy_z_ts))
 		fire_hydrant_dist.append(
 			(
-				ts, _calculate_distance(
-					dummy_x_ts,dummy_y_ts,dummy_z_ts,
-					fire_hydrant_x_ts,fire_hydrant_y_ts,fire_hydrant_z_ts,
-					type=dist_type
+				ts, _new_calculate_distance(
+					dummy_collider_x_min, dummy_z_ts, fire_hydrant_collider_closest_x, fire_hydrant_collider_closest_z
 				)
 			)
 		)
 		stop_sign_dist.append(
 			(
-				ts, _calculate_distance(
-					dummy_x_ts,dummy_y_ts, dummy_z_ts,
-					stop_sign_x_ts,stop_sign_y_ts,stop_sign_z_ts,
-					type=dist_type
+				ts, _new_calculate_distance(
+					dummy_collider_x_min, dummy_z_ts, stop_sign_collider_closest_x, stop_sign_collider_closest_z
 				)
 			)
 		)
 		bike_dist.append(
 			(
-				ts, _calculate_distance(
-					dummy_x_ts,dummy_y_ts, dummy_z_ts,
-					bike_x_ts,bike_y_ts,bike_z_ts,
-					type=dist_type
+				ts, _new_calculate_distance(
+					dummy_collider_x_min, dummy_z_ts, bike_collider_closest_x, bike_collider_closest_z
 				)
 			)
 		)
@@ -137,6 +152,10 @@ def _calculate_distance(x1, y1, z1, x2, y2, z2, type = "3d"):
 	else:
 		raise AttributeError
 
+	return dist
+
+def _new_calculate_distance(x1, z1, x2, z2):
+	dist = math.sqrt((x1-x2)**2 + (z1-z2)**2)
 	return dist
 
 def check_on_path(trace: Trace, dist_type: str) -> float:
