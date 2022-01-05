@@ -74,9 +74,6 @@ BoxOutputs/*
 
 WriteLines.txt
 
-# Add model files to .gitignore
-Assets/Models/*
-
 # Traces for STL
 Traces/*
 !Traces/.gitkeep
