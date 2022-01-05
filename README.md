@@ -1,3 +1,17 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:7e4104a8802bbb69502535af2c3616ed334d8bb92cc6dec09fd1db4af8622da0
-size 446
+# obstacle_avoidance_for_vips
+Obstacle Avoidance for Visually Impaired Persons
+
+### Developer Setup
+
+Install Unity Version: 2022.10a16 (This is a pre-release). The pre-release gives 
+the project access to *Unity for Python* allowing the use of STL semantics.
+
+Install Python3
+
+The YOLO model is not included in source control to work around large file limit in GitHub.
+Please download the [model file](https://google.com) and rename to 
+
+TODO
+
+
+
