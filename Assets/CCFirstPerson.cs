@@ -12,6 +12,8 @@ public class CCFirstPerson : MonoBehaviour
 
     private GameManager _manager;
 
+    private bool obstacleHit = false;
+
     void Awake(){
         _manager = GameObject.FindObjectOfType<GameManager>();
     }
@@ -19,24 +21,51 @@ public class CCFirstPerson : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(_manager.humanMovementEnabled){
-            controller.Move(direction * speed * Time.deltaTime);
+        if (obstacleHit)
+        {
+            // start next episode
+            _manager.NextEpisode();
         }
-        else{
-            walkAnimation.enabled = false;
+        else
+        {
+            WalkStep();
         }
+        
     }
 
     void OnControllerColliderHit(ControllerColliderHit hit)
     {
         if (hit.transform.tag == "Obstacle") 
         {
-            walkAnimation.enabled = false;
-            Debug.Log($"WE HIT AN OBSTACLE: {hit.transform.name}");
+            if(hit.transform.name != "SidewalkEnd"){
+                walkAnimation.enabled = false;
+                Debug.Log($"WE HIT AN OBSTACLE: {hit.transform.name}");
+            }
+            else{
+                Debug.Log("HIT END OF EPISODE");
+            }
+            obstacleHit = true; 
 
-            // start next episode
-            _manager.NextEpisode();
             
+        }
+    }
+
+    private void WalkStep()
+    {
+        //Debug.Log(string.Format("Time {0},  Direction {1}, speed {2}", Time.time, direction, speed));
+        if(_manager.humanMovementEnabled){
+            if (direction.z == 0f)
+            {
+                controller.Move(direction * speed * Time.deltaTime);    
+            }
+            else
+            {
+                controller.Move(direction * speed);
+            }   
+            // controller.Move(direction * speed * Time.deltaTime);
+        }
+        else{
+            walkAnimation.enabled = false;
         }
     }
 }

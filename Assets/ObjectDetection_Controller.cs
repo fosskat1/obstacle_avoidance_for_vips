@@ -39,7 +39,7 @@ public class ObjectDetection_Controller : MonoBehaviour
     private int DepthFileCounter;
 
     // Controller variables
-    public CharacterController controller;
+    // public CharacterController controller;
 
     private const int NUM_LANES = 3;
     private int currentLane = NUM_LANES/2; // middle lane
@@ -61,8 +61,8 @@ public class ObjectDetection_Controller : MonoBehaviour
         m_RuntimeModel = ModelLoader.Load(modelAsset);
         // For CPU
         //this.m_Worker = WorkerFactory.CreateWorker(
-        //    WorkerFactory.Type.CSharpBurst, m_RuntimeModel
-        //    );
+        //   WorkerFactory.Type.CSharpBurst, m_RuntimeModel
+        //   );
         // For GPU
         this.m_Worker = GraphicsWorker.GetWorker(m_RuntimeModel);
 
@@ -247,17 +247,17 @@ public class ObjectDetection_Controller : MonoBehaviour
         if (direction == "STRAIGHT")
         {
             dir = new Vector3(-1f, 0f, 0f).normalized;
-            s = 1.0f;
+            s = 0.8f;
         }  
         else if (direction == "LEFT")
         {
             dir = new Vector3(-0.5f, 0f, -1f).normalized;
-            s = 1.0f/Time.deltaTime;
+            s = 1.0f; // 1.0f/Time.deltaTime;
         }
         else if (direction == "RIGHT")
         {
             dir = new Vector3(-0.5f, 0f, 1f).normalized;
-            s = 1.0f/Time.deltaTime;
+            s = 1.0f; // 1.0f/Time.deltaTime;
         }
         else if (direction == "STOP")
         {
@@ -277,7 +277,7 @@ public class ObjectDetection_Controller : MonoBehaviour
         {
             _manager.humanMovementEnabled = true;
             dir = new Vector3(-1f, 0f, 0f).normalized;
-            s = 1.0f;
+            s = 0.8f;
         }
 
         CCFirstPerson.direction = dir;
@@ -409,9 +409,9 @@ public class ObjectDetection_Controller : MonoBehaviour
         AddNoiseToDepthTexture(texture, noisyTexture);
 
         // Check if noise is added
-        Color old_pixel = texture.GetPixel(208, 104);
-        Color new_pixel = noisyTexture.GetPixel(208, 104);
-        Debug.Log(string.Format("Old Pixel: " + old_pixel.ToString() + " New Pixel: " + new_pixel.ToString()));
+        // Color old_pixel = texture.GetPixel(208, 104);
+        // Color new_pixel = noisyTexture.GetPixel(208, 104);
+        // Debug.Log(string.Format("Old Pixel: " + old_pixel.ToString() + " New Pixel: " + new_pixel.ToString()));
 
         WriteDepthTextureToJpeg(noisyTexture);
 

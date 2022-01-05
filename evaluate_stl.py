@@ -3,6 +3,8 @@ from collections import defaultdict, deque
 from pathlib import Path
 from typing import Iterable, List, Mapping, NamedTuple, Tuple
 import math
+import glob
+import os
 
 import rtamt
 from rtamt import STLDenseTimeSpecification
@@ -16,7 +18,11 @@ def extract_trace(tracefile: Path) -> Trace:
     			"fireHydrantX", "fireHydrantY", "fireHydrantZ",
     			"stopSignX", "stopSignY", "stopSignZ",
     			"bikeX", "bikeY", "bikeZ",
-    			"leftSidewalkBoundZ", "rightSidewalkBoundZ", "endSidewalkBoundX"
+    			"leftSidewalkBoundZ", "rightSidewalkBoundZ", "endSidewalkBoundX",
+				"bikeColliderXMin", "bikeColliderXMax", "bikeColliderClosestX", "bikeColliderClosestZ",
+				"hydrantColliderXMin", "hydrantColliderXMax", "hydrantColliderClosestX", "hydrantColliderClosestZ",
+				"stopColliderXMin", "stopColliderXMax", "stopColliderClosestX", "stopColliderClosestZ",
+				"dummyColliderXMin", "dummyColliderXMax", "dummyColliderClosestX", "dummyColliderClosestZ"
     	]
     trace = defaultdict(deque)  # type: Mapping[str, deque[Tuple[float, float]]]
     with open(tracefile, "r") as f:
@@ -27,24 +33,28 @@ def extract_trace(tracefile: Path) -> Trace:
     return trace
 
 def _prepare_spec() -> STLDenseTimeSpecification:
-    spec = STLDenseTimeSpecification()
-    # spec.set_sampling_period(500, "ms", 0.1)
-    spec.declare_const("sidewalk_safe_dist", "float", "0.2")
-    spec.declare_const("obstacle_safe_dist", "float", "0.5")
-    # spec.declare_const("sidewalk_length", "float", "0.0")
-    # spec.declare_const("T", "float", "20.0")
+	spec = STLDenseTimeSpecification()
+	# spec.set_sampling_period(500, "ms", 0.1)
+	spec.declare_const("sidewalk_safe_dist", "float", "0.2")
+	spec.declare_const("obstacle_safe_dist", "float", "0.6")
+	# spec.declare_const("sidewalk_length", "float", "0.0")
+	# spec.declare_const("T", "float", "20.0")
 
-    spec.declare_var("dist_covered", "float")
-    spec.declare_var("left_sidewalk_dist", "float")
-    spec.declare_var("right_sidewalk_dist", "float")
-    spec.declare_var("fire_hydrant_dist", "float")
-    spec.declare_var("stop_sign_dist", "float")
-    spec.declare_var("bike_dist", "float")
+	spec.declare_var("dist_covered", "float")
+	spec.declare_var("left_sidewalk_dist", "float")
+	spec.declare_var("right_sidewalk_dist", "float")
+	spec.declare_var("fire_hydrant_dist", "float")
+	spec.declare_var("stop_sign_dist", "float")
+	spec.declare_var("bike_dist", "float")
 	spec.declare_var("end_dist", "float")
 
-    return spec
+	return spec
 
-def _parse_and_eval_spec(spec: STLDenseTimeSpecification, trace: Trace) -> float:
+def _parse_and_eval_spec(
+	spec: STLDenseTimeSpecification, 
+	trace: Trace, 
+	dist_type: str
+) -> float:
 	try:
 	    spec.parse()
 	except rtamt.STLParseException as e:
@@ -62,18 +72,35 @@ def _parse_and_eval_spec(spec: STLDenseTimeSpecification, trace: Trace) -> float
 		dummy_x_ts = trace["dummyX"][idx][1]
 		dummy_y_ts = trace["dummyY"][idx][1]
 		dummy_z_ts = trace["dummyZ"][idx][1]
+		dummy_collider_x_min = trace["dummyColliderXMin"][idx][1]
+		dummy_collider_x_max = trace["dummyColliderXMax"][idx][1]
+		dummy_collider_closest_x = trace["dummyColliderClosestX"][idx][1]
+		dummy_collider_closest_z = trace["dummyColliderClosestZ"][idx][1]
+
 
 		fire_hydrant_x_ts = trace["fireHydrantX"][idx][1]
 		fire_hydrant_y_ts = trace["fireHydrantY"][idx][1]
 		fire_hydrant_z_ts = trace["fireHydrantZ"][idx][1]
+		fire_hydrant_collider_x_min = trace["hydrantColliderXMin"][idx][1]
+		fire_hydrant_collider_x_max = trace["hydrantColliderXMax"][idx][1]
+		fire_hydrant_collider_closest_x = trace["hydrantColliderClosestX"][idx][1]
+		fire_hydrant_collider_closest_z = trace["hydrantColliderClosestZ"][idx][1]
 
 		stop_sign_x_ts = trace["stopSignX"][idx][1]
 		stop_sign_y_ts = trace["stopSignY"][idx][1]
 		stop_sign_z_ts = trace["stopSignZ"][idx][1]
+		stop_sign_collider_x_min = trace["stopColliderXMin"][idx][1]
+		stop_sign_collider_x_max = trace["stopColliderXMax"][idx][1]
+		stop_sign_collider_closest_x = trace["stopColliderClosestX"][idx][1]
+		stop_sign_collider_closest_z = trace["stopColliderClosestZ"][idx][1]
 
 		bike_x_ts = trace["bikeX"][idx][1]
 		bike_y_ts = trace["bikeY"][idx][1]
 		bike_z_ts = trace["bikeZ"][idx][1]
+		bike_collider_x_min = trace["bikeColliderXMin"][idx][1]
+		bike_collider_x_max = trace["bikeColliderXMax"][idx][1]
+		bike_collider_closest_x = trace["bikeColliderClosestX"][idx][1]
+		bike_collider_closest_z = trace["bikeColliderClosestZ"][idx][1]
 
 		left_sidewalk_z_ts = trace["leftSidewalkBoundZ"][idx][1]
 		right_sidewalk_z_ts = trace["rightSidewalkBoundZ"][idx][1]
@@ -82,25 +109,22 @@ def _parse_and_eval_spec(spec: STLDenseTimeSpecification, trace: Trace) -> float
 		right_sidewalk_dist.append((ts, right_sidewalk_z_ts-dummy_z_ts))
 		fire_hydrant_dist.append(
 			(
-				ts, _calculate_distance(
-					dummy_x_ts,dummy_y_ts,dummy_z_ts,
-					fire_hydrant_x_ts,fire_hydrant_y_ts,fire_hydrant_z_ts
+				ts, _new_calculate_distance(
+					dummy_collider_x_min, dummy_z_ts, fire_hydrant_collider_closest_x, fire_hydrant_collider_closest_z
 				)
 			)
 		)
 		stop_sign_dist.append(
 			(
-				ts, _calculate_distance(
-					dummy_x_ts,dummy_y_ts, dummy_z_ts,
-					stop_sign_x_ts,stop_sign_y_ts,stop_sign_z_ts
+				ts, _new_calculate_distance(
+					dummy_collider_x_min, dummy_z_ts, stop_sign_collider_closest_x, stop_sign_collider_closest_z
 				)
 			)
 		)
 		bike_dist.append(
 			(
-				ts, _calculate_distance(
-					dummy_x_ts,dummy_y_ts, dummy_z_ts,
-					bike_x_ts,bike_y_ts,bike_z_ts
+				ts, _new_calculate_distance(
+					dummy_collider_x_min, dummy_z_ts, bike_collider_closest_x, bike_collider_closest_z
 				)
 			)
 		)
@@ -115,55 +139,101 @@ def _parse_and_eval_spec(spec: STLDenseTimeSpecification, trace: Trace) -> float
 	    ["end_dist", list(trace["endSidewalkBoundX"])],
 	)
 
-def _calculate_distance(x1, y1, z1, x2, y2, z2):
-	return math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)
+def _calculate_distance(x1, y1, z1, x2, y2, z2, type = "3d"):
+	if type == "3d": # Euclidean 3d distance
+		dist = math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)
+	elif type == "2d": # Euclidean 2d distance
+		dist = math.sqrt((x1-x2)**2 + (z1-z2)**2)
+	elif type == "1d": # Euclidean 1d distance
+		if abs(z2 - z1) < 0.3:
+			dist = abs(x2 - x1)
+		else:
+			dist = 5 # default value for safe distance
+	else:
+		raise AttributeError
 
-def check_on_path(trace: Trace) -> float:
+	return dist
+
+def _new_calculate_distance(x1, z1, x2, z2):
+	dist = math.sqrt((x1-x2)**2 + (z1-z2)**2)
+	return dist
+
+def check_on_path(trace: Trace, dist_type: str) -> float:
 	spec = _prepare_spec()
 
 	spec.name = "Check if person stays within sidewalk bounds"
 	spec.spec = "always ((left_sidewalk_dist >= sidewalk_safe_dist) and (right_sidewalk_dist >= sidewalk_safe_dist))"
 
-	return _parse_and_eval_spec(spec, trace)
+	return _parse_and_eval_spec(spec, trace, dist_type)
 
-def check_obstacle_avoidance(trace: Trace) -> float:
+def check_obstacle_avoidance(trace: Trace, dist_type: str) -> float:
 	spec = _prepare_spec()
 
 	spec.name = "Check if person stays away from obstacles"
 	spec.spec = "always ((fire_hydrant_dist >= obstacle_safe_dist) and (stop_sign_dist >= obstacle_safe_dist) and (bike_dist >= obstacle_safe_dist))"
 
-	return _parse_and_eval_spec(spec, trace)
+	return _parse_and_eval_spec(spec, trace, dist_type)
 
-def check_reach_end(trace: Trace) -> float:
+def check_reach_end(trace: Trace, dist_type: str) -> float:
 	spec = _prepare_spec()
 
 	spec.name = "Check if person reaches the end of the sidewalk"
 	spec.spec = "eventually (dist_covered <= end_dist)"
 
-	return _parse_and_eval_spec(spec, trace)
+	return _parse_and_eval_spec(spec, trace, dist_type)
 
-def evaluate_tracefile(tracefile: Path):
+def evaluate_tracefile(tracefile: Path, dist_type: str):
     trace = extract_trace(tracefile)
 
-    on_path = check_on_path(trace)
-    # print(
-    #     "Robustness for `on_path` = {}".format(
-    #         (on_path[0], on_path[-1])
-    #     )
-    # )
+    on_path = check_on_path(trace, dist_type)
+    print(
+        "Robustness for `on_path` = {}".format(
+            (on_path[0], on_path[-1])
+        )
+    )
 
-    obstacle_avoidance = check_obstacle_avoidance(trace)
-    # print(
-    #     "Robustness for `obstacle_avoidance` = {}".format(
-    #         (obstacle_avoidance[0], obstacle_avoidance[-1])
-    #     )
-    # )
+    obstacle_avoidance = check_obstacle_avoidance(trace, dist_type)
+    print(
+        "Robustness for `obstacle_avoidance` = {}".format(
+            (obstacle_avoidance[0], obstacle_avoidance[-1])
+        )
+    )
 
-    reach_end = check_reach_end(trace)
+    reach_end = check_reach_end(trace, dist_type)
+    print(
+        "Robustness for `reach_end` = {}".format(
+            (reach_end[0], reach_end[-1])
+        )
+    )
 
-    print("Robustness for `on_path` = ", on_path)
-    print("Robustness for `obstacle_avoidance` = ", obstacle_avoidance)
-    print("Robustness for `reach_end` = ", reach_end)
+    (
+    	trial_success, 
+    	on_path_success, 
+    	obstacle_avoidance_success, 
+    	reach_end_success
+    ) = False, False, False, False
+
+    if on_path[0][1] > 0:
+    	on_path_success = True
+    if obstacle_avoidance[0][1] > 0:
+    	obstacle_avoidance_success = True
+    if reach_end[0][1] > 0:
+    	reach_end_success = True
+    if on_path_success and obstacle_avoidance_success and reach_end_success:
+    	trial_success = True
+
+    return (
+    	trial_success, 
+    	on_path_success, 
+    	obstacle_avoidance_success, 
+    	reach_end_success
+    	)
+
+
+
+    # print("Robustness for `on_path` = ", on_path)
+    # print("Robustness for `obstacle_avoidance` = ", obstacle_avoidance)
+    # print("Robustness for `reach_end` = ", reach_end)
 
 def main():
     # args = parse_args()
@@ -176,12 +246,45 @@ def main():
     #     print("===================================================")
     #     print()
 
-    tracefile = "trace.csv"
-    print("===================================================")
-    print("Evaluating trace file: %s", tracefile)
-    evaluate_tracefile(tracefile)
-    print("===================================================")
-    print()
+	tracefile_dir = "Traces"
+	dist_type = "2d"
+
+	tracefiles = sorted(glob.glob(os.path.join(tracefile_dir, "*.csv")))[:-1]
+
+	num_trials = 0
+	num_successful_trials = 0
+	num_successful_on_path = 0
+	num_successful_obstacle_avoidance = 0
+	num_successful_reach_end = 0
+	for tracefile in tracefiles:
+	    print("===================================================")
+	    print("Evaluating trace file: %s", tracefile)
+	    success_values = evaluate_tracefile(tracefile, dist_type)
+	    print("===================================================")
+	    print()
+	    num_trials += 1
+	    if success_values[0]:
+	    	num_successful_trials += 1
+	    if success_values[1]:
+	    	num_successful_on_path += 1
+	    if success_values[2]:
+	    	num_successful_obstacle_avoidance += 1
+	    if success_values[3]:
+	    	num_successful_reach_end += 1
+
+	print("===================================================")
+	print("Summary")
+	print("Number of trials:\t\t\t\t", num_trials)
+	print("Number of successful trials:\t\t\t", num_successful_trials)
+	print("Number of trials with user on path:\t\t", num_successful_on_path)
+	print(
+		  "Number of trials with obstacles avoided:\t", 
+		  num_successful_obstacle_avoidance
+		)
+	print(
+		  "Number of trials with end reached:\t\t", 
+		  num_successful_reach_end
+		  )
 
 
 if __name__ == "__main__":

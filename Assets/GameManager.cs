@@ -8,7 +8,7 @@
  
          //Accessible only trough editor or from this class
          [SerializeField]
-         public const int MAX_EPISODES = 3;
+         public const int MAX_EPISODES = 20;
  
          public int episodeNumber;
          public bool humanMovementEnabled {get; set;}

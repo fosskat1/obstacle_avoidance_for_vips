@@ -14,17 +14,18 @@ public class LogTrace : MonoBehaviour
 	private GameObject rightSidewalkBound;
     private GameObject endSidewalkBound;
     private GameManager _manager;
-	// public static string filePath = "trace.csv";
- //    private StreamWriter traceWriter = new StreamWriter(filePath);
+    private List<GameObject> obstaclesWithColliders;
+    // private string filePath;
 
     void Awake(){
          _manager = GameObject.FindObjectOfType<GameManager>();
     }
     void Start()
     {
-    	string filePath = "trace.csv";
-    	StreamWriter traceWriter = new StreamWriter(new FileStream(filePath, FileMode.Append, FileAccess.Write));
-    	string header = "time,dummyX,dummyY,dummyZ,fireHydrantX,fireHydrantY,fireHydrantZ,stopSignX,stopSignY,stopSignZ,bikeX,bikeY,bikeZ,leftSidewalkBoundZ,rightSidewalkBoundZ, endSidewalkBoundX";
+        obstaclesWithColliders = new List<GameObject>();
+    	string filePath = string.Format("Traces/trace_{0}.csv", _manager.episodeNumber);
+    	StreamWriter traceWriter = new StreamWriter(new FileStream(filePath, FileMode.Create, FileAccess.Write));
+    	string header = "time,dummyX,dummyY,dummyZ,fireHydrantX,fireHydrantY,fireHydrantZ,stopSignX,stopSignY,stopSignZ,bikeX,bikeY,bikeZ,leftSidewalkBoundZ,rightSidewalkBoundZ,endSidewalkBoundX,bikeColliderXMin,bikeColliderXMax,bikeColliderClosestX,bikeColliderClosestZ,hydrantColliderXMin,hydrantColliderXMax,hydrantColliderClosestX,hydrantColliderClosestZ,stopColliderXMin,stopColliderXMax,stopColliderClosestX,stopColliderClosestZ,dummyColliderXMin,dummyColliderXMax,dummyColliderClosestX,dummyColliderClosestZ";
     	traceWriter.WriteLine(header);
     	traceWriter.Close();
 
@@ -35,10 +36,34 @@ public class LogTrace : MonoBehaviour
         leftSidewalkBound = GameObject.Find("LeftSidewalkBound");
         rightSidewalkBound = GameObject.Find("RightSidewalkBound");
         endSidewalkBound = GameObject.Find("SidewalkEnd");
+        obstaclesWithColliders.Add(obstacleBike); 
+        obstaclesWithColliders.Add(obstacleFireHydrant);
+        obstaclesWithColliders.Add(obstacleStopSign);
+        obstaclesWithColliders.Add(dummy);      
+
     }
 
     // Update is called once per frame
     void Update()
+    {
+    	LogToFile();
+    }
+
+    void OnDisable()
+    {
+    	// LogToFile();
+        // traceWriter.Close();
+    }
+
+    private string GetPositionString(Vector3 position)
+    {
+    	string vectorString = position.ToString();
+    	string positionString = vectorString.Substring(1, vectorString.Length-2);
+
+    	return positionString;
+    }
+
+    private void LogToFile()
     {
     	float timeElapsed = Time.time;
         Vector3 dummyPosition = dummy.transform.position;
@@ -49,7 +74,7 @@ public class LogTrace : MonoBehaviour
         float leftSidewalkBoundZ = leftSidewalkBound.transform.position.z;//0.5f;
         float rightSidewalkBoundZ = rightSidewalkBound.transform.position.z - rightSidewalkBound.transform.lossyScale.z;//3.5f;
         float endSidewalkBoundX = endSidewalkBound.transform.position.x + 1; // adding for buffer
-        Debug.Log($"sidewalk: {leftSidewalkBoundZ}, {rightSidewalkBoundZ}, {endSidewalkBoundX}");
+        // Debug.Log($"sidewalk: {leftSidewalkBoundZ}, {rightSidewalkBoundZ}, {endSidewalkBoundX}");
 
         string dummyPositionString = GetPositionString(dummyPosition);
         string fireHydrantPositionString = GetPositionString(fireHydrantPosition);
@@ -65,24 +90,22 @@ public class LogTrace : MonoBehaviour
         valueStrings.Add(leftSidewalkBoundZ.ToString());
         valueStrings.Add(rightSidewalkBoundZ.ToString());
         valueStrings.Add(endSidewalkBoundX.ToString());
+        for(int i=0; i<obstaclesWithColliders.Count; i++){
+            Collider collider = obstaclesWithColliders[i].GetComponent<Collider>();
+            //Debug.Log($"{collider.name}: {collider.bounds.min.x}, {collider.bounds.max.x}");
+            valueStrings.Add(collider.bounds.min.x.ToString());
+            valueStrings.Add(collider.bounds.max.x.ToString());
+            valueStrings.Add(collider.ClosestPoint(dummy.transform.position).x.ToString());
+            valueStrings.Add(collider.ClosestPoint(dummy.transform.position).z.ToString());
+        }
+        
 
-        string filePath = "trace.csv";
+        string filePath = string.Format("Traces/trace_{0}.csv", _manager.episodeNumber);
     	StreamWriter traceWriter = new StreamWriter(new FileStream(filePath, FileMode.Append, FileAccess.Write));
         string traceLogString = string.Join(",", valueStrings);
         traceWriter.WriteLine(traceLogString);
-        traceWriter.Close();
-    }
+        traceWriter.Close();       
 
-    void OnDisable()
-    {
-        // traceWriter.Close();
-    }
-
-    private string GetPositionString(Vector3 position)
-    {
-    	string vectorString = position.ToString();
-    	string positionString = vectorString.Substring(1, vectorString.Length-2);
-
-    	return positionString;
+        //Debug.Log(traceLogString);
     }
 }
