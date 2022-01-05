@@ -58,9 +58,6 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
-# onnx models
-*.onnx
-
 # Intellij
 .idea/
 
@@ -73,9 +70,6 @@ TempImages/*/*
 BoxOutputs/*
 
 WriteLines.txt
-
-# Add model files to .gitignore
-Assets/Models/*
 
 # Traces for STL
 Traces/*
