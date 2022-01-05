@@ -1,10 +1,10 @@
 # Simulated Navigational Assistance Device for Visually Impaired Persons
 **Authors:** Katie Foss and Advait Rane
 ### Table of Contents:
-1. [Project Summary](#ProjectSummary)
-2. [Simulation Runs](#SimulationRuns)
-3. [Architecture Diagram](#ArchitectureDiagram)
-4. [Developer Setup](#DeveloperSetup)
+1. [Project Summary](#Project-Summary)
+2. [Simulation Runs](#Simulation-Runs)
+3. [Architecture Diagram](#Architecture-Diagram)
+4. [Developer Setup](#Developer-Setup)
 5. [References](#References)
 
 ### Project Summary
