@@ -34,9 +34,9 @@ The camera feed is split into three lanes and the clear lane is chosen to procee
 ![Path Planning Image](ReadmeResources/path_planning.JPG)
 
 ### Simulation Runs
-Successful Runs: ![Successful Runs Video](ReadmeResources/DemosAllSuccess.mp4)
+Successful Runs: ![Successful Runs Video](ReadmeResources/DemosAllSuccess.gif)
 
-Unsuccessful Runs: ![Unsuccessful Runs Video](ReadmeResources/CrashLandings.mp4)
+Unsuccessful Runs: ![Unsuccessful Runs Video](ReadmeResources/CrashLandings.gif)
 
 
 ### Architecture Diagram
