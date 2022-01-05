@@ -1,3 +1,39 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:daafb5f1bc277897372231700b9376c21d81b1c2ed24d33ef37f0f66214101e3
-size 1126
+ using UnityEngine;
+ using UnityEngine.SceneManagement;
+ 
+     //To be attached to an object inside the first scene
+     public class GameManager : MonoBehaviour
+     {
+         private static bool _created = false;
+ 
+         //Accessible only trough editor or from this class
+         [SerializeField]
+         public const int MAX_EPISODES = 20;
+ 
+         public int episodeNumber;
+         public bool humanMovementEnabled {get; set;}
+ 
+         private void Awake()
+         {
+             if (!_created)
+             {
+                 DontDestroyOnLoad(this.gameObject);
+                 _created = true;
+                 Init();
+             }
+         }
+ 
+         public void Init()
+         {
+             episodeNumber = 1;
+             humanMovementEnabled = true;
+         }
+
+         public void NextEpisode(){
+            humanMovementEnabled = false;
+            // start next scene
+            var activeScene = SceneManager.GetActiveScene();
+            SceneManager.LoadScene(activeScene.name, LoadSceneMode.Single) ;
+            episodeNumber += 1;
+         }
+     }
