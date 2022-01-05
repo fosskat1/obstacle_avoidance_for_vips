@@ -1,3 +1,11 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:8a2d311d8ce2f948bf049af2250b52c5d3f4b735c5778e122d55ab0cb3911eba
-size 298
+{
+    "MonoBehaviour": {
+        "m_Enabled": true,
+        "m_EditorHideFlags": 0,
+        "m_Name": "",
+        "m_EditorClassIdentifier": "Unity.Scripting.Python.Editor:UnityEditor.Scripting.Python:PythonSettings",
+        "m_sitePackages": [
+            "Assets/site-packages"
+        ]
+    }
+}
